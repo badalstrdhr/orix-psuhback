@@ -3,65 +3,103 @@
 /**
  * orix pushback api
  */
+
+include_once 'index.php';
+
 class orixPushback {
-	public $token = null;
-	public $data = [];
+	protected $token = null;
+	protected $functionCalled = null;
+	protected $data = [];
 	public function __construct() {
-		return $this->token;
+		return 'this is orixPushback api';
 	}
-	public function token() {
-		if(!empty($this->token)) {
-			$this->data = array('token'=>$this->token, 'time_genarate' =>time(), 'error' =>0, 'msg'=>null);
-		} else {
-			if($_SERVER['REQUEST_METHOD'] !== null && ($_SERVER['REQUEST_METHOD']=='POST')) {
-				if($_SERVER['PHP_AUTH_USER']=='dev-Test1') {
-					if($_SERVER['PHP_AUTH_PW']=='dheeraj@1234') {
-						$this->token = $this->generateToken(); 
-						$this->data = array('token'=>$this->token, 'time_genarate'=>time(), 'error'=>0, 'msg'=>null);
-					} else {
-						$this->data = array('token'=>$this->token, 'time_genarate' =>time(), 'error' =>1, 'msg'=>'Password is wrong');
-					}
+	public static function Sign($payload, $key, $expire = null) {
+        // Header
+        $headers = ['algo'=>'HS256', 'type'=>'JWT', 'expire' => time()+$expire];
+        if($expire){
+            $headers['expire'] = time()+$expire;
+        }
+        $headers_encoded = base64_encode(json_encode($headers));
+
+        // Payload
+        $payload['time'] = time();
+        $payload_encoded = base64_encode(json_encode($payload));
+
+        // Signature
+        $signature = hash_hmac('SHA256',$headers_encoded.$payload_encoded,$key);
+        $signature_encoded = base64_encode($signature);
+
+        // Token
+        $token = $headers_encoded . '.' . $payload_encoded .'.'. $signature_encoded;
+        $status = '';
+        $expire_at = date("Y-m-d h:i:s",$headers['expire']);
+        if($token) {
+        	$status = 1;
+        	$msg = 'Token generated';
+        	$data = array('token'=>$token, 'expire_at'=>$expire_at);
+        }
+        return self::handleReturn($data, $status, $msg);
+    }
+    public static function Verify($token, $key) {
+
+        // Break token parts
+        $token_parts = explode('.', $token);
+
+        // Verigy Signature
+        $signature = base64_encode(hash_hmac('SHA256',$token_parts[0].$token_parts[1],$key));
+        if($signature != $token_parts[2]){
+            return false;
+        }
+
+        // Decode headers & payload
+        $headers = json_decode(base64_decode($token_parts[0]), true);
+        $payload = json_decode(base64_decode($token_parts[1]), true);
+
+        // Verify validity
+        if(isset($headers['expire']) && $headers['expire'] < time()){
+            return false;
+        }
+
+        // If token successfully verified
+        return $payload;
+    }
+	public static function BookingTripStartDetails($requestdata) {
+		if($getBearerToken = self::getBearerToken()) {
+			if($payload = self::Verify($getBearerToken, KEY)) {
+				if($payload['id'] == "]OwHd&I;@*fwkc/") {
+					$status = 1;
+					$msg = "Token validated";
 				} else {
-					$this->data = array('token'=>$this->token, 'time_genarate' =>time(), 'error' =>1, 'msg'=>'Username is wrong');
+					$status = 0;
+					$msg = "Token validatation failed";
 				}
-			} else {
-				$this->data = array('token'=>$this->token, 'time_genarate' =>time(), 'error' =>1, 'msg'=>'Method is not allowed');
+			}else{
+				$status = 0;
+				$msg = "Missing payload";
 			}
+		}else{
+			$status = 0;
+			$msg = "Missing bearer token";
 		}
-		return $this->handleReturn();
-	}	
-	public function BookingTripStartDetails() {
-
-		print_r($_POST);
-		// echo "<br>1111111";
-		// if($headers = getallheaders()) {
-		// 	 if (isset($headers['Authorization'])) {
-		//         $authHeader = $headers['Authorization'];
-		//         if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-		//             print_r($matches[1]);
-		//             if($matches[1] == $this->token) {
-		// 			 // $this->data = array('data1'=>'data1', 'data2' =>'data2');
-		// 			 // return $this->handleReturn();
-		//             }else{
-		// 			 // $this->data = array('time_genarate' =>time(), 'error' =>1, 'msg'=>'Bearer token is not matching');
-		// 			 // return $this->handleReturn();
-		//             }
-		//         }
-		//     }
-		// }
-
-		$this->data = array('time_genarate' =>time(), 'error' =>1, 'msg'=>'kfhsfkk');
-		return $this->handleReturn($status);
+		return self::handleReturn($requestdata, $status, $msg);
 	}
-	public function handleReturn($status) {
+	public static function getBearerToken() {
+		if($headers = getallheaders()) {
+			 if (isset($headers['Authorization'])) {
+		        $authHeader = $headers['Authorization'];
+		        if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+		            return $matches[1];
+		        }
+		    }
+		}
+	}
+	public static function handleReturn($data, $status, $msg) {
 		$return = [
-		 "status"=> "success",
-		 "requestTime"=> "2019-02-21 16:07:25",
-		 "data"=>$this->data
+			 "status"=>$status,
+			 "msg"=>$msg,
+			 "requestTime"=>date("Y-m-d h:i:s"),
+			 "data"=>$data
 		];
-		echo json_encode($return, true);
-	}
-	public function generateToken($length = 40) {
-	    return bin2hex(openssl_random_pseudo_bytes($length));
+		return $return;
 	}
 }
