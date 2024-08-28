@@ -161,13 +161,17 @@ class orixapi{
 				]; 
 				
 				if($responsedata->status=='sucess'){
+
+					/*Original param to b store for pushback api*/
+					$original_param = isset($getpatameter) ? json_encode($getpatameter) : null; 
+					
 					$data = new stdClass();
 					$data->ext_booking_number = $responsedata->data->ext_booking_number;
 					$data->OrderUID = "";
 					$data->ClientReferanceNumber = $params->booking_ref_number;
 					$createdtime = time();
 
-					$qry_addlog = "insert into booking_creation(seller_code, ext_booking_number, client_referance_number, orderuid, status, createdtime, customerid) values('$selercode', '$data->ext_booking_number','$data->ClientReferanceNumber', '$data->OrderUID', '1','$createdtime','$this->customername')";
+					$qry_addlog = "insert into booking_creation(seller_code, ext_booking_number, client_referance_number, orderuid, status, createdtime, customerid, original_param) values('$selercode', '$data->ext_booking_number','$data->ClientReferanceNumber', '$data->OrderUID', '1','$createdtime','$this->customername', '$original_param')";
 
 					mysqli_query($CFG, $qry_addlog);
 				} 
@@ -331,13 +335,17 @@ class orixapi{
 			]; 
 			
 			if($responsedata->status=='sucess'){
+
+				/*Original param to b store for pushback api*/
+				$original_param = isset($getpatameter) ? json_encode($getpatameter) : null; 
+
 				$data = new stdClass();
 				$data->ext_booking_number = $responsedata->data->ext_booking_number;
 				$data->OrderUID = "";
 				$data->ClientReferanceNumber = $params->booking_ref_number;
 				$createdtime = time();
 
-				$qry_addlog = "insert into booking_creation(seller_code, ext_booking_number, orderuid, client_referance_number, status, createdtime, customerid) values('$selercode', '$data->ext_booking_number', '$data->OrderUID', '$data->ClientReferanceNumber','1','$createdtime','$this->customername')";
+				$qry_addlog = "insert into booking_creation(seller_code, ext_booking_number, orderuid, client_referance_number, status, createdtime, customerid, original_param) values('$selercode', '$data->ext_booking_number', '$data->OrderUID', '$data->ClientReferanceNumber','1','$createdtime','$this->customername', '$original_param')";
 				mysqli_query($CFG, $qry_addlog);
 			} 
 		}
@@ -751,7 +759,7 @@ class orixapi{
  	}
 	function validateLatitude($val) {
 		// return true;
-	    $lat = intval($lat);
+	    $lat = intval($val);
 	  return preg_match('/^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$/', $lat);
 	     // return preg_match( "#^([\+\-]|)([0-9]*)(\.([0-9]*?)|)(0*)$#", trim($val));
     // return $o[1].sprintf('%d',$o[2]).($o[3]!='.'?$o[3]:'');

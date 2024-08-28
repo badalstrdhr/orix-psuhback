@@ -5,3 +5,4 @@ require 'classes.php';
 // Generate token
 $token = orixPushback::Sign($payload, KEY, 60*60);
 echo json_encode($token, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+

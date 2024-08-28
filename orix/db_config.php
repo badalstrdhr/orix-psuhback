@@ -2,9 +2,9 @@
 global $CFG;
 $servername = "localhost";
 
-$username = "phpadmin";
+$username = "root";
 
-$password = "114920";
+$password = "";
 
 $databas = "orix";
 
