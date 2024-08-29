@@ -13,7 +13,7 @@ class orixPushback {
 	protected $data = [];
 	public $CFG;
 	public function __construct() {
-		return 'this is orixPushback api';
+		return 'Syncing with orixPushback api to myf reciever api';
 	}
 	public static function Sign($payload, $key, $expire = null) {
         // Header
@@ -82,169 +82,310 @@ class orixPushback {
         // If token successfully verified
         return $payload;
     }
-	public static function BookingTripStartDetails($requestdata) {
+    public static function AcceptanceStatus($requestdata) {
 		global $CFG;
-		$query = "SELECT `original_param` FROM booking_creation WHERE ext_booking_number = '$requestdata->booking_id'";
-		if($queryData = mysqli_fetch_assoc(mysqli_query($CFG, $query))) {
-			$original_param = json_decode($queryData['original_param']);
-			$requestdata->event_name = 'start';
-			$requestdata->event_datetime = $requestdata->event_datetime;
-			$requestdata->seller_code = SELLER_CODE;
-			$requestdata->booking_id = $requestdata->booking_id;
-			// $requestdata->garage_pickup_distance = $original_param->garage_pickup_distance;
-			// $requestdata->garage_pickup_time = $original_param->garage_pickup_time;
-			// $requestdata->current_address = $original_param->current_address;
-			$requestdata->current_lat = $requestdata->current_lat;
-			$requestdata->current_lng = $requestdata->current_lng;
-			// $requestdata->meter_reading = $original_param->meter_reading;
-			$requestdata->passcode = $original_param->start_trip_passcode;
-			if($getBearerToken = self::getBearerToken()) {
-				if($payload = self::Verify($getBearerToken, KEY)) {
-					if($payload['id'] == "]OwHd&I;@*fwkc/") {
-						$status = 1;
-						$msg = "Token validated";
-					} else {
-						$status = 0;
-						$msg = "Token validatation failed";
-					}
-				} else {
-					$status = 0;
-					$msg = "Missing payload";
+		$requestDataNew = new stdClass();
+		if($_SERVER['REQUEST_METHOD'] == 'POST') {
+			$bookingId = $requestdata->bookingId;
+			$query = "SELECT `original_param`, `ext_booking_number` FROM booking_creation WHERE ext_booking_number = '$bookingId'";
+			if($queryData = mysqli_fetch_assoc(mysqli_query($CFG, $query))) {
+				$original_param = json_decode($queryData['original_param']);
+				if($requestdata->serviceProviderResponse == 'ACCEPT') {
+					$requestDataNew->event_name = "booking_confirmation";
+					$requestDataNew->event_datetime = "no_data";
+					$requestDataNew->seller_code = SELLER_CODE;
+					$requestDataNew->ext_booking_number = $bookingId;
+					$requestDataNew->accept = "yes";
+				}elseif($requestdata->serviceProviderResponse == 'REJECT') {
+					$requestDataNew->event_name = "booking_confirmation";
+					$requestDataNew->event_datetime = "no_data";
+					$requestDataNew->seller_code = SELLER_CODE;
+					$requestDataNew->ext_booking_number = $bookingId;
+					$requestDataNew->accept = "no";
+				}else{
+					$status = 1;
+					$msg = "Invalid request";
 				}
-			} else {
-				$status = 0;
-				$msg = "Missing bearer token";
-			}
-		} else {
-			$status = 0;
-			$msg = "Invalid booking details";
-		}
-		return self::handleReturn($requestdata, $status, $msg);
-	}
-	public static function BookingTripEndDetails($requestdata) {
-		global $CFG;
-		$query = "SELECT `original_param` FROM booking_creation WHERE ext_booking_number = '$requestdata->booking_id'";
-		if($queryData = mysqli_fetch_assoc(mysqli_query($CFG, $query))) {
-			$original_param = json_decode($queryData['original_param']);
-			$requestdata->event_name = 'end';
-			$requestdata->event_datetime = $requestdata->event_datetime;
-			$requestdata->seller_code = SELLER_CODE;
-			$requestdata->booking_id = $requestdata->booking_id;
-			// $requestdata->current_address = $original_param->current_address;
-			$requestdata->current_lat = $requestdata->current_lat;
-			$requestdata->current_lng = $requestdata->current_lng;
-			// $requestdata->meter_reading = $original_param->meter_reading;
-			// $requestdata->drop_garage_distance = $original_param->drop_garage_distance;
-			// $requestdata->drop_garage_time = $original_param->drop_garage_time;
-			// $requestdata->waiting_time = $original_param->waiting_time;
-			// $requestdata->pickup_drop_distance = $original_param->waiting_time;
-			$requestdata->passcode = $original_param->end_trip_passcode;
-			if($getBearerToken = self::getBearerToken()) {
-				if($payload = self::Verify($getBearerToken, KEY)) {
-					if($payload['id'] == "]OwHd&I;@*fwkc/") {
-						$status = 1;
-						$msg = "Token validated";
-					} else {
+				if($getBearerToken = self::getBearerToken()) {
+					if($payload = self::Verify($getBearerToken, KEY)) {
+						if($payload['id'] == "]OwHd&I;@*fwkc/") {
+							$status = 1;
+							$msg = "Token validated";
+						} else {
+							$status = 0;
+							$msg = "Token validatation failed";
+						}
+					}else{
 						$status = 0;
-						$msg = "Token validatation failed";
+						$msg = "Missing payload";
 					}
 				}else{
 					$status = 0;
-					$msg = "Missing payload";
+					$msg = "Missing bearer token";
 				}
-			}else{
+			} else {
 				$status = 0;
-				$msg = "Missing bearer token";
+				$msg = "Invalid booking details";
 			}
 		} else {
-			$status = 0;
-			$msg = "Invalid booking details";
-		}
-		return self::handleReturn($requestdata, $status, $msg);
-	}
-	public static function AcceptanceStatus($requestdata) {
-		global $CFG;
-		if($getBearerToken = self::getBearerToken()) {
-			if($payload = self::Verify($getBearerToken, KEY)) {
-				if($payload['id'] == "]OwHd&I;@*fwkc/") {
-					$status = 1;
-					$msg = "Token validated";
-				} else {
-					$status = 0;
-					$msg = "Token validatation failed";
-				}
-			}else{
-				$status = 0;
-				$msg = "Missing payload";
-			}
-		}else{
-			$status = 0;
-			$msg = "Missing bearer token";
-		}
-		return self::handleReturn($requestdata, $status, $msg);
+        	$status = 0;
+        	$msg = 'Method is not allowed';
+        }
+		return self::handleReturn($requestDataNew, $status, $msg);
 	}
 	public static function DriverAndCabDetails($requestdata) {
 		global $CFG;
-		if($getBearerToken = self::getBearerToken()) {
-			if($payload = self::Verify($getBearerToken, KEY)) {
-				if($payload['id'] == "]OwHd&I;@*fwkc/") {
-					$status = 1;
-					$msg = "Token validated";
+		$requestDataNew = new stdClass();
+		if($_SERVER['REQUEST_METHOD'] == 'POST') {
+			$bookingId = $requestdata->data->bookingId;
+			$driverName = $requestdata->data->driverName;
+			$driverMobile = $requestdata->data->driverMobile;
+			$query = "SELECT `original_param` FROM booking_creation WHERE ext_booking_number ='$bookingId'";
+			if($queryData = mysqli_fetch_assoc(mysqli_query($CFG, $query))) {
+				$original_param = json_decode($queryData['original_param']);
+				if($bookingId) {
+					$requestDataNew->event_name = "assigned";
+					$requestDataNew->event_datetime = "";
+					$requestDataNew->seller_code = SELLER_CODE;
+					$requestDataNew->booking_id = $bookingId;
+					$requestDataNew->supplier_id = "no_data";
+					$requestDataNew->driver_type = "no_data";
+					$requestDataNew->driver_name = $driverName;
+					$requestDataNew->driver_phone = $driverMobile;
+					$requestDataNew->driving_license = "no_data";
+					$requestDataNew->car_number = "no_data";
+					$requestDataNew->model_id = $original_param->model_id;
+					$requestDataNew->car_model = "no_data";
+					$requestDataNew->car_fuel_type = "no_data";
+					$requestDataNew->dispatch_datetime = "no_data";
+					$requestDataNew->car_changed = "no_change";
+					$requestDataNew->reassign = "no";
+					$requestDataNew->reassign_reason_id = "no_data";
+					$requestDataNew->reassign_reason = "no_data";
+				}
+				if($getBearerToken = self::getBearerToken()) {
+					if($payload = self::Verify($getBearerToken, KEY)) {
+						if($payload['id'] == "]OwHd&I;@*fwkc/") {
+							$status = 1;
+							$msg = "Token validated";
+						} else {
+							$status = 0;
+							$msg = "Token validatation failed";
+						}
+					}else{
+						$status = 0;
+						$msg = "Missing payload";
+					}
+				}else{
+					$status = 0;
+					$msg = "Missing bearer token";
+				}
+			}else {
+				$status = 0;
+				$msg = "Invalid booking details";
+			}
+		} else {
+        	$status = 0;
+        	$msg = 'Method is not allowed';
+        }
+		return self::handleReturn($requestDataNew, $status, $msg);
+	}
+	public static function BookingTripStartDetails($requestdata) {
+		global $CFG;
+		$requestDataNew = new stdClass();
+		if($_SERVER['REQUEST_METHOD'] == 'POST') {
+			$bookingId = $requestdata->data->bookingId;
+			$eventDatetime = $requestdata->data->eventDatetime;
+			$currentLat = $requestdata->data->currentLat;
+			$currentLng = $requestdata->data->currentLng;
+			$query = "SELECT `original_param` FROM booking_creation WHERE ext_booking_number = '$bookingId'";
+			if($queryData = mysqli_fetch_assoc(mysqli_query($CFG, $query))) {
+				$original_param = json_decode($queryData['original_param']);
+				$requestDataNew->event_name = 'start';
+				$requestDataNew->event_datetime = "no_data";
+				$requestDataNew->seller_code = SELLER_CODE;
+				$requestDataNew->booking_id = $bookingId;
+				$requestDataNew->garage_pickup_distance = "no_data";
+				$requestDataNew->garage_pickup_time = "no_data";
+				$requestDataNew->current_address = "no_data";
+				$requestDataNew->current_lat = $currentLat;
+				$requestDataNew->current_lng = $currentLng;
+				$requestDataNew->meter_reading = "no_data";
+				$requestDataNew->passcode = $original_param->start_trip_passcode;
+				if($getBearerToken = self::getBearerToken()) {
+					if($payload = self::Verify($getBearerToken, KEY)) {
+						if($payload['id'] == "]OwHd&I;@*fwkc/") {
+							$status = 1;
+							$msg = "Token validated";
+						} else {
+							$status = 0;
+							$msg = "Token validatation failed";
+						}
+					} else {
+						$status = 0;
+						$msg = "Missing payload";
+					}
 				} else {
 					$status = 0;
-					$msg = "Token validatation failed";
+					$msg = "Missing bearer token";
 				}
-			}else{
+			} else {
 				$status = 0;
-				$msg = "Missing payload";
+				$msg = "Invalid booking details";
 			}
-		}else{
-			$status = 0;
-			$msg = "Missing bearer token";
-		}
-		return self::handleReturn($requestdata, $status, $msg);
+		} else {
+        	$status = 0;
+        	$msg = 'Method is not allowed';
+        }
+		return self::handleReturn($requestDataNew, $status, $msg);
+	}
+	public static function BookingTripEndDetails($requestdata) {
+		global $CFG;
+		$requestDataNew = new stdClass();
+		if($_SERVER['REQUEST_METHOD'] == 'POST') {
+			$bookingId = $requestdata->data->bookingId;
+			$eventDatetime = $requestdata->data->eventDatetime;
+			$currentLat = $requestdata->data->currentLat;
+			$currentLng = $requestdata->data->currentLng;
+			$query = "SELECT `original_param` FROM booking_creation WHERE ext_booking_number = '$bookingId'";
+			if($queryData = mysqli_fetch_assoc(mysqli_query($CFG, $query))) {
+				$original_param = json_decode($queryData['original_param']);
+				$requestDataNew->event_name = 'end';
+				$requestDataNew->event_datetime = $eventDatetime;
+				$requestDataNew->seller_code = SELLER_CODE;
+				$requestDataNew->booking_id = $bookingId;
+				$requestDataNew->current_address = "no_data";
+				$requestDataNew->current_lat = $currentLat;
+				$requestDataNew->current_lng = $currentLng;
+				$requestDataNew->meter_reading = "no_data";
+				$requestDataNew->drop_garage_distance = "no_data";
+				$requestDataNew->drop_garage_time = "no_data";
+				$requestDataNew->waiting_time = "no_data";
+				$requestDataNew->pickup_drop_distance = "no_data";
+				$requestDataNew->passcode = $original_param->end_trip_passcode;
+				if($getBearerToken = self::getBearerToken()) {
+					if($payload = self::Verify($getBearerToken, KEY)) {
+						if($payload['id'] == "]OwHd&I;@*fwkc/") {
+							$status = 1;
+							$msg = "Token validated";
+						} else {
+							$status = 0;
+							$msg = "Token validatation failed";
+						}
+					}else{
+						$status = 0;
+						$msg = "Missing payload";
+					}
+				}else{
+					$status = 0;
+					$msg = "Missing bearer token";
+				}
+			} else {
+				$status = 0;
+				$msg = "Invalid booking details";
+			}
+		} else {
+        	$status = 0;
+        	$msg = 'Method is not allowed';
+        }
+		return self::handleReturn($requestDataNew, $status, $msg);
 	}
 	public static function BookingTracking($requestdata) {
 		global $CFG;
-		if($getBearerToken = self::getBearerToken()) {
-			if($payload = self::Verify($getBearerToken, KEY)) {
-				if($payload['id'] == "]OwHd&I;@*fwkc/") {
-					$status = 1;
-					$msg = "Token validated";
-				} else {
+		$requestDataNew = new stdClass();
+		if($_SERVER['REQUEST_METHOD'] == 'POST') {
+			$bookingId = $requestdata->data->bookingId;
+			$dutyStatus = $requestdata->data->dutyStatus;
+			$lat = $requestdata->data->lat;
+			$lng = $requestdata->data->lng;
+			$gpsTime = $requestdata->data->gpsTime;
+			$query = "SELECT `original_param` FROM booking_creation WHERE ext_booking_number = '$bookingId'";
+			if($queryData = mysqli_fetch_assoc(mysqli_query($CFG, $query))) {
+				$original_param = json_decode($queryData['original_param']);
+				$requestDataNew->event_name = "driver_location";
+				$requestDataNew->event_datetime = "";
+				$requestDataNew->seller_code = SELLER_CODE;
+				$requestDataNew->booking_id = $bookingId;
+				$requestDataNew->locations = array(
+					array(
+						"current_trip_status"=>$dutyStatus,
+						"lat"=>$lat,
+						"lng"=>$lng,
+						"time"=>"no_data",
+						"gps_time"=>$gpsTime,
+						"location_accuracy"=>"no_data",
+						"speed"=>"no_data",
+						"provider"=>"no_data",
+						"bearing"=>"no_data",
+						"altitude"=>"no_data"
+					)
+				);
+				if($getBearerToken = self::getBearerToken()) {
+					if($payload = self::Verify($getBearerToken, KEY)) {
+						if($payload['id'] == "]OwHd&I;@*fwkc/") {
+							$status = 1;
+							$msg = "Token validated";
+						} else {
+							$status = 0;
+							$msg = "Token validatation failed";
+						}
+					}else{
+						$status = 0;
+						$msg = "Missing payload";
+					}
+				}else{
 					$status = 0;
-					$msg = "Token validatation failed";
+					$msg = "Missing bearer token";
 				}
-			}else{
+			} else {
 				$status = 0;
-				$msg = "Missing payload";
+				$msg = "Invalid booking details";
 			}
-		}else{
-			$status = 0;
-			$msg = "Missing bearer token";
-		}
-		return self::handleReturn($requestdata, $status, $msg);
+		} else {
+        	$status = 0;
+        	$msg = 'Method is not allowed';
+        }
+		return self::handleReturn($requestDataNew, $status, $msg);
 	}
 	public static function BookingInvoice($requestdata) {
 		global $CFG;
-		if($getBearerToken = self::getBearerToken()) {
-			if($payload = self::Verify($getBearerToken, KEY)) {
-				if($payload['id'] == "]OwHd&I;@*fwkc/") {
-					$status = 1;
-					$msg = "Token validated";
-				} else {
+		$requestDataNew = new stdClass();
+		if($_SERVER['REQUEST_METHOD'] == 'POST') {
+			$bookingId = $requestdata->data->bookingId;
+			$query = "SELECT `original_param` FROM booking_creation WHERE ext_booking_number = '$bookingId'";
+			if($queryData = mysqli_fetch_assoc(mysqli_query($CFG, $query))) {
+				$original_param = json_decode($queryData['original_param']);
+				$requestDataNew->event_name = "generate_invoice";
+				$requestDataNew->event_datetime = "no_data";
+				$requestDataNew->seller_code = SELLER_CODE;
+				$requestDataNew->booking_id = $bookingId;
+				$requestDataNew->ext_bill_number = "no_data";
+				if($getBearerToken = self::getBearerToken()) {
+					if($payload = self::Verify($getBearerToken, KEY)) {
+						if($payload['id'] == "]OwHd&I;@*fwkc/") {
+							$status = 1;
+							$msg = "Token validated";
+						} else {
+							$status = 0;
+							$msg = "Token validatation failed";
+						}
+					}else{
+						$status = 0;
+						$msg = "Missing payload";
+					}
+				}else{
 					$status = 0;
-					$msg = "Token validatation failed";
+					$msg = "Missing bearer token";
 				}
-			}else{
+			} else {
 				$status = 0;
-				$msg = "Missing payload";
+				$msg = "Invalid booking details";
 			}
-		}else{
-			$status = 0;
-			$msg = "Missing bearer token";
-		}
-		return self::handleReturn($requestdata, $status, $msg);
+		} else {
+        	$status = 0;
+        	$msg = 'Method is not allowed';
+        }
+		return self::handleReturn($requestDataNew, $status, $msg);
 	}
 	public static function getBearerToken() {
 		if($headers = getallheaders()) {

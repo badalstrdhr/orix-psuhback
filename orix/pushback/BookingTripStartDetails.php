@@ -6,7 +6,6 @@ require 'classes.php';
 $response = file_get_contents('php://input');
 $data = json_decode($response); 
 $BookingTripStartDetails = orixPushback::BookingTripStartDetails($data);
-
 $return = [];
 if($BookingTripStartDetails['status']) {
     
@@ -38,6 +37,7 @@ if($BookingTripStartDetails['status']) {
         $return['status']  = "failed";
         $return['requestTime'] = date("Y-m-d h:i:s");
         $return['data'] = $result;
+        $return['required_param_myf'] = $BookingTripStartDetails['data'];
     }
 } else {
     $return['status']  = "failed";

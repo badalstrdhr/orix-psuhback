@@ -1,11 +1,11 @@
 <?php
 
 // Endpoint for BookingTripEndDetails...
+require '../db_config.php';
 require 'classes.php';
 $response = file_get_contents('php://input');
 $data = json_decode($response); 
 $BookingTripEndDetails = orixPushback::BookingTripEndDetails($data);
-
 $return = [];
 if($BookingTripEndDetails['status']) {
     
@@ -37,6 +37,7 @@ if($BookingTripEndDetails['status']) {
         $return['status']  = "failed";
         $return['requestTime'] = date("Y-m-d h:i:s");
         $return['data'] = $result;
+        $return['required_param_myf'] = $BookingTripEndDetails['data'];
     }
 } else {
     $return['status']  = "failed";
