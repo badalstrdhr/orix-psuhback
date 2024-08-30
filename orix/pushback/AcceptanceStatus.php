@@ -6,25 +6,24 @@ require 'classes.php';
 $client = isset($_GET['client']) ? $_GET['client'] : ''; 
 $serviceProviderResponse = isset($_GET['serviceProviderResponse']) ? $_GET['serviceProviderResponse'] : ''; 
 $bookingId = isset($_GET['bookingId']) ? $_GET['bookingId'] : '';
-
 $data = new stdClass(); 
 $data->client = $client; 
 $data->serviceProviderResponse = $serviceProviderResponse; 
 $data->bookingId = $bookingId; 
 $AcceptanceStatus = orixPushback::AcceptanceStatus($data);
 $return = [];
-
 if($AcceptanceStatus['status']) {
     /* 1. Booking Confirmation*/
     /*Call curl request start*/
+    $request_payload = json_encode($AcceptanceStatus['data']);
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, CURL_URL.'booking_confirmation');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($AcceptanceStatus['data']));
-    $headers = array();
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $request_payload);
+    $headers = [];
     $headers[] = 'Content-Type: application/json';
-    // $headers[] = 'rqid: b7d03a6947b217efb6f3ec3bd3504582';
+    $headers[] = 'rqid: '.orixPushback::Rqid($request_payload);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     $result = curl_exec($ch);
     $result = json_decode($result);

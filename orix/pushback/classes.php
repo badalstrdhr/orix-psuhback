@@ -15,6 +15,12 @@ class orixPushback {
 	public function __construct() {
 		return 'Syncing with orixPushback api to myf reciever api';
 	}
+	public static function Rqid($payload) {
+		$combined_string = $payload . '||' . SECURITY_SALT;
+		$hash_value = hash('sha256', $combined_string);
+		$rqid = strtolower($hash_value);
+		return $rqid;
+	}
 	public static function Sign($payload, $key, $expire = null) {
         // Header
         $headers = ['algo'=>'HS256', 'type'=>'JWT', 'expire' => time()+$expire];
