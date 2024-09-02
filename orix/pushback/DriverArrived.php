@@ -1,36 +1,34 @@
 <?php
 
-// Endpoint for BookingTripEndDetails...
+// Endpoint for DriverArrived...
 require '../db_config.php';
 require 'classes.php';
 $response = file_get_contents('php://input');
 $data = json_decode($response); 
-$BookingTripEndDetails = orixPushback::BookingTripEndDetails($data);
+$DriverArrived = orixPushback::DriverArrived($data);
 $result = [];
-if($BookingTripEndDetails['status']) {
-    
+if($DriverArrived['status']) {
+    /* 1. Driver Assignment*/
     /*Call curl request start*/
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, CURL_URL.'end');
+    curl_setopt($ch, CURLOPT_URL, CURL_URL.'arrived');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($BookingTripEndDetails['data']));
-
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($DriverArrived['data']));
     $headers = array();
     $headers[] = 'Content-Type: application/json';
-    $headers[] = 'rqid: '.orixPushback::Rqid($BookingTripEndDetails['data']);
+    $headers[] = 'rqid: '.orixPushback::Rqid($DriverArrived['data']);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
     $result = curl_exec($ch);
     $result = json_decode($result);
     if (curl_errno($ch)) {
-    echo 'Error:' . curl_error($ch);
+        echo 'Error:' . curl_error($ch);
     }
     curl_close($ch);
     /*Call curl request end*/
 } else {
     $result['status']  = "failed";
-    $result['msg']  = $BookingTripEndDetails['msg'];
+    $result['msg']  = $DriverArrived['msg'];
     $result['requestTime'] = date("Y-m-d h:i:s");
     $result['data'] = null;
 }

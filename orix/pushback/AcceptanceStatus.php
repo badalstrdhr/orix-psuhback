@@ -11,19 +11,23 @@ $data->client = $client;
 $data->serviceProviderResponse = $serviceProviderResponse; 
 $data->bookingId = $bookingId; 
 $AcceptanceStatus = orixPushback::AcceptanceStatus($data);
-$return = [];
+$result = [];
+// echo "<pre>";
+// echo "Requested paramt for myf (booking_confirmation)";
+// print_r($data);
+// echo "</pre>";
+// echo "<br>";
 if($AcceptanceStatus['status']) {
     /* 1. Booking Confirmation*/
     /*Call curl request start*/
-    $request_payload = json_encode($AcceptanceStatus['data']);
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, CURL_URL.'booking_confirmation');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $request_payload);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($AcceptanceStatus['data']));
     $headers = [];
     $headers[] = 'Content-Type: application/json';
-    $headers[] = 'rqid: '.orixPushback::Rqid($request_payload);
+    $headers[] = 'rqid: '.orixPushback::Rqid($AcceptanceStatus['data']);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     $result = curl_exec($ch);
     $result = json_decode($result);
@@ -32,24 +36,13 @@ if($AcceptanceStatus['status']) {
     }
     curl_close($ch);
     /*Call curl request end*/
-    if ($result->status != "error") {
-        $return['status']  = "success";
-        $return['requestTime'] = date("Y-m-d h:i:s");
-        $return['data'] = $result;
-
-    }else{
-        $return['status']  = "failed";
-        $return['requestTime'] = date("Y-m-d h:i:s");
-        $return['data'] = $result;
-        $return['required_param_myf'] = $AcceptanceStatus['data'];
-    }
 } else {
-    $return['status']  = "failed";
-    $return['msg']  = $AcceptanceStatus['msg'];
-    $return['requestTime'] = date("Y-m-d h:i:s");
-    $return['data'] = null;
+    $result['status']  = "failed";
+    $result['msg']  = $AcceptanceStatus['msg'];
+    $result['requestTime'] = date("Y-m-d h:i:s");
+    $result['data'] = null;
 }
 
 header('Content-Type: application/json');
-echo $final_response = json_encode($return, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+echo $final_response = json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 

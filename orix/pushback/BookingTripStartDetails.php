@@ -6,7 +6,7 @@ require 'classes.php';
 $response = file_get_contents('php://input');
 $data = json_decode($response); 
 $BookingTripStartDetails = orixPushback::BookingTripStartDetails($data);
-$return = [];
+$result = [];
 if($BookingTripStartDetails['status']) {
     
     /*Call curl request start*/
@@ -18,7 +18,7 @@ if($BookingTripStartDetails['status']) {
 
     $headers = array();
     $headers[] = 'Content-Type: application/json';
-    // $headers[] = 'rqid: b7d03a6947b217efb6f3ec3bd3504582';
+    $headers[] = 'rqid: '.orixPushback::Rqid($BookingTripStartDetails['data']);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
     $result = curl_exec($ch);
@@ -29,23 +29,13 @@ if($BookingTripStartDetails['status']) {
     curl_close($ch);
     /*Call curl request end*/
 
-    if ($result->status != "error") {
-        $return['status']  = "success";
-        $return['requestTime'] = date("Y-m-d h:i:s");
-        $return['data'] = $result;
-    } else {
-        $return['status']  = "failed";
-        $return['requestTime'] = date("Y-m-d h:i:s");
-        $return['data'] = $result;
-        $return['required_param_myf'] = $BookingTripStartDetails['data'];
-    }
 } else {
-    $return['status']  = "failed";
-    $return['msg']  = $BookingTripStartDetails['msg'];
-    $return['requestTime'] = date("Y-m-d h:i:s");
-    $return['data'] = null;
+    $result['status']  = "failed";
+    $result['msg']  = $BookingTripStartDetails['msg'];
+    $result['requestTime'] = date("Y-m-d h:i:s");
+    $result['data'] = null;
 }
 
 header('Content-Type: application/json');
-echo $final_response = json_encode($return, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+echo $final_response = json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
