@@ -212,24 +212,25 @@ class orixPushback {
 		global $CFG;
 		$requestDataNew = new stdClass();
 		if($_SERVER['REQUEST_METHOD'] == 'POST') {
-			// $bookingId = $requestdata->data->bookingId;
-			// $driverName = $requestdata->data->driverName;
-			// $driverMobile = $requestdata->data->driverMobile;
-			// $plateNo = $requestdata->data->plateNo;
+			$bookingId = $requestdata->data->bookingId;
+			$dutyStatus = $requestdata->data->dutyStatus;
+			$lat = $requestdata->data->lat;
+			$lng = $requestdata->data->lng;
+			$gpsTime = $requestdata->data->gpsTime;
 			$query = "SELECT `original_param`, `ext_booking_number`, `client_referance_number` FROM booking_creation WHERE ext_booking_number ='$bookingId'";
 			if($queryData = mysqli_fetch_assoc(mysqli_query($CFG, $query))) {
 				$original_param = json_decode($queryData['original_param']);
 				if($bookingId) {
-					$requestDataNew->event_name = "assigned";
+					$requestDataNew->event_name = "dispatch";
 					$requestDataNew->event_datetime = date("Y-m-d h:i:s",time());
 					$requestDataNew->seller_code = SELLER_CODE;
 					$requestDataNew->booking_id = $queryData['client_referance_number'];;
 					$requestDataNew->auto_driver_confirm = 1;
-					$requestDataNew->current_lat = 0;
-					$requestDataNew->current_lng = 0;
-					$requestDataNew->dispatch_center_lat = 0;
-					$requestDataNew->dispatch_center_lng = 0;
-					$requestDataNew->qc_parameter = array("list"=>array(array("parameter_id"=>1,"parameter_value"=>"no"), array("parameter_id"=>2,"parameter_value"=>"yes")));
+					$requestDataNew->current_lat = $lat;
+					$requestDataNew->current_lng = $lng;
+					$requestDataNew->dispatch_center_lat = $lat;
+					$requestDataNew->dispatch_center_lng = $lng;
+					// $requestDataNew->qc_parameter = array("list"=>array(array("parameter_id"=>1,"parameter_value"=>"no"), array("parameter_id"=>2,"parameter_value"=>"yes")));
 				}
 				if($getBearerToken = self::getBearerToken()) {
 					if($payload = self::Verify($getBearerToken, KEY)) {
@@ -262,10 +263,11 @@ class orixPushback {
 		global $CFG;
 		$requestDataNew = new stdClass();
 		if($_SERVER['REQUEST_METHOD'] == 'POST') {
-			// $bookingId = $requestdata->data->bookingId;
-			// $driverName = $requestdata->data->driverName;
-			// $driverMobile = $requestdata->data->driverMobile;
-			// $plateNo = $requestdata->data->plateNo;
+			$bookingId = $requestdata->data->bookingId;
+			$dutyStatus = $requestdata->data->dutyStatus;
+			$lat = $requestdata->data->lat;
+			$lng = $requestdata->data->lng;
+			$gpsTime = $requestdata->data->gpsTime;
 			$query = "SELECT `original_param`, `ext_booking_number`, `client_referance_number` FROM booking_creation WHERE ext_booking_number ='$bookingId'";
 			if($queryData = mysqli_fetch_assoc(mysqli_query($CFG, $query))) {
 				$original_param = json_decode($queryData['original_param']);
@@ -274,9 +276,9 @@ class orixPushback {
 					$requestDataNew->event_datetime = date("Y-m-d h:i:s",time());
 					$requestDataNew->seller_code = SELLER_CODE;
 					$requestDataNew->booking_id = $queryData['client_referance_number'];;
-					$requestDataNew->current_address = "N/A";
-					$requestDataNew->current_lat = 0;
-					$requestDataNew->current_lng = 0;
+					$requestDataNew->current_address = $gpsTime;
+					$requestDataNew->current_lat = $lat;
+					$requestDataNew->current_lng = $lng;
 				}
 				if($getBearerToken = self::getBearerToken()) {
 					if($payload = self::Verify($getBearerToken, KEY)) {
@@ -411,6 +413,7 @@ class orixPushback {
 		$requestDataNew = new stdClass();
 		if($_SERVER['REQUEST_METHOD'] == 'POST') {
 			$bookingId = $requestdata->data->bookingId;
+			/* dispatch, arrived, pickup, drop */
 			$dutyStatus = $requestdata->data->dutyStatus;
 			$lat = $requestdata->data->lat;
 			$lng = $requestdata->data->lng;
@@ -436,6 +439,7 @@ class orixPushback {
 						"altitude"=>""
 					)
 				);
+
 				if($getBearerToken = self::getBearerToken()) {
 					if($payload = self::Verify($getBearerToken, KEY)) {
 						if($payload['id'] == "]OwHd&I;@*fwkc/") {
